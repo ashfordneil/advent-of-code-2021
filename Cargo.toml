@@ -1,0 +1,18 @@
+[package]
+name = "advent-of-code-2021"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "day1"
+path = "./src/bin/day1.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+color-eyre = "0.5.11"
+env_logger = "0.9.0"
+eyre = "0.6.5"
+itertools = "0.10.1"
+log = "0.4.14"
+structopt = "0.3.25"
