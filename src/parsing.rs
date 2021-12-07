@@ -20,3 +20,18 @@ where
 
     Ok(output)
 }
+
+/// Fetch data from a file, split it up by comma delimiters, and parse it.
+pub fn comma_separated<T: FromStr, P: AsRef<Path>>(input: P) -> eyre::Result<Vec<T>>
+    where
+        Report: From<T::Err>,
+{
+    let raw = fs::read_to_string(input)?;
+    let output = raw
+        .split(',')
+        .map(|item| item.trim())
+        .map(|item| item.parse::<T>())
+        .collect::<Result<Vec<_>, _>>()?;
+
+    Ok(output)
+}
