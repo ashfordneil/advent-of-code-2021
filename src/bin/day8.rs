@@ -129,13 +129,14 @@ fn part_two(input: &[Input]) -> eyre::Result<usize> {
 
             // Five segments lit up
             let (two, three, five) = match find_with_len::<3>(5, input)? {
-                [three, a, b] | [a, three, b] | [a, b, three] if three.contains(one) => match (a, b) {
-                    (two, five) | (five, two) if six.contains(five) => (two, three, five),
-                    _ => eyre::bail!("Can't find a 5")
-                },
-                _ => eyre::bail!("Can't find a 3")
+                [three, a, b] | [a, three, b] | [a, b, three] if three.contains(one) => {
+                    match (a, b) {
+                        (two, five) | (five, two) if six.contains(five) => (two, three, five),
+                        _ => eyre::bail!("Can't find a 5"),
+                    }
+                }
+                _ => eyre::bail!("Can't find a 3"),
             };
-
 
             let digits = [zero, one, two, three, four, five, six, seven, eight, nine];
 
@@ -155,6 +156,7 @@ fn part_two(input: &[Input]) -> eyre::Result<usize> {
 #[cfg(test)]
 mod test {
     use super::Input;
+    use advent_of_code_2021::tools::{MoreItertools, StringTools};
 
     fn get_example_input() -> Vec<Input> {
         let raw = r"
@@ -169,11 +171,10 @@ mod test {
             egadfb cdbfeg cegd fecab cgb gbdefca cg fgcdab egfdb bfceg | gbdfcae bgc cg cgb
             gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
         ";
-        raw.lines()
-            .map(|line| line.trim())
-            .filter(|line| !line.is_empty())
-            .map(|line| line.parse().unwrap())
-            .collect()
+        raw.lines_good()
+            .parsed()
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap()
     }
 
     #[test]

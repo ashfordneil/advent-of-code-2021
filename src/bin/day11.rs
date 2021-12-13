@@ -1,4 +1,8 @@
-use advent_of_code_2021::util::{self, FixedCollector};
+use advent_of_code_2021::{
+    data::Coordinate,
+    tools::StringTools,
+    util::{self, FixedCollector},
+};
 use std::{
     collections::VecDeque,
     fs,
@@ -18,7 +22,7 @@ struct Args {
 
 #[derive(Debug, Copy, Clone)]
 struct OctopusGrid {
-    levels: [[u32; 10]; 10],
+    levels: [[u8; 10]; 10],
 }
 
 impl FromStr for OctopusGrid {
@@ -26,14 +30,13 @@ impl FromStr for OctopusGrid {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let levels = s
-            .lines()
-            .map(|line| line.trim())
-            .filter(|line| !line.is_empty())
+            .lines_good()
             .map(|line| {
                 line.chars()
                     .map(|ch| {
-                        ch.to_digit(10)
-                            .ok_or_else(|| eyre::format_err!("Invalid char: {:?}", ch))
+                        let mut tmp = [0u8; 4];
+                        let string = ch.encode_utf8(&mut tmp);
+                        string.parse::<u8>()
                     })
                     .collect::<Result<FixedCollector<_, 10>, _>>()?
                     .0
@@ -45,60 +48,36 @@ impl FromStr for OctopusGrid {
     }
 }
 
-type Coordinate = (usize, usize);
-
 impl Index<Coordinate> for OctopusGrid {
-    type Output = u32;
+    type Output = u8;
 
-    fn index(&self, (x, y): Coordinate) -> &Self::Output {
+    fn index(&self, Coordinate(x, y): Coordinate) -> &Self::Output {
         self.levels.index(x).index(y)
     }
 }
 
 impl IndexMut<Coordinate> for OctopusGrid {
-    fn index_mut(&mut self, (x, y): Coordinate) -> &mut Self::Output {
+    fn index_mut(&mut self, Coordinate(x, y): Coordinate) -> &mut Self::Output {
         self.levels.index_mut(x).index_mut(y)
     }
 }
 
 impl OctopusGrid {
-    fn iter() -> impl Iterator<Item = Coordinate> {
-        (0..10).flat_map(|x| (0..10).map(move |y| (x, y)))
-    }
-
-    fn neighbours((x, y): Coordinate) -> impl Iterator<Item = Coordinate> {
-        let mut output = Vec::new();
-        for dx in -1..=1 {
-            if (dx == -1 && x == 0) || (dx == 1 && x == 9) {
-                continue;
-            }
-            for dy in -1..=1 {
-                if (dy == -1 && y == 0) || (dy == 1 && y == 9) || (dx == 0 && dy == 0) {
-                    continue;
-                }
-
-                let x = (x as isize + dx) as usize;
-                let y = (y as isize + dy) as usize;
-                output.push((x, y))
-            }
-        }
-
-        output.into_iter()
-    }
+    const MAX_POINT: Coordinate = Coordinate(10, 10);
 
     // Returns the number of flashes
     fn step(&mut self) -> usize {
-        for coord in Self::iter() {
+        for coord in Coordinate::iter(Self::MAX_POINT) {
             self[coord] += 1;
         }
 
         // Things only enter this list once they have reached length 9
-        let mut flashing = Self::iter()
+        let mut flashing = Coordinate::iter(Self::MAX_POINT)
             .filter(|&coord| self[coord] > 9)
             .collect::<VecDeque<_>>();
 
         while let Some(next) = flashing.pop_front() {
-            for neighbour in Self::neighbours(next) {
+            for neighbour in next.all_neighbours(Self::MAX_POINT) {
                 if self[neighbour] <= 9 {
                     self[neighbour] += 1;
                     if self[neighbour] > 9 {
@@ -108,7 +87,7 @@ impl OctopusGrid {
             }
         }
 
-        Self::iter()
+        Coordinate::iter(Self::MAX_POINT)
             .filter(|&coord| {
                 if self[coord] > 9 {
                     self[coord] = 0;

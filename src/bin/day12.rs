@@ -1,4 +1,8 @@
-use advent_of_code_2021::{parsing, util};
+use advent_of_code_2021::{
+    parsing,
+    tools::{MoreItertools, StringTools},
+    util,
+};
 use std::{
     collections::{HashMap, HashSet},
     path::PathBuf,
@@ -49,11 +53,7 @@ impl FromStr for Edge {
     type Err = eyre::Report;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let (from, to) = s
-            .split_once('-')
-            .ok_or_else(|| eyre::format_err!("Invalid edge format"))?;
-        let from = from.parse()?;
-        let to = to.parse()?;
+        let (from, to) = s.split_parse("-")?;
         Ok(Edge { from, to })
     }
 }
@@ -99,12 +99,7 @@ impl FromStr for Graph {
     type Err = eyre::Report;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let edges = s
-            .lines()
-            .map(|line| line.trim())
-            .filter(|line| !line.is_empty())
-            .map(|line| line.parse::<Edge>())
-            .collect::<Result<Vec<_>, _>>()?;
+        let edges = s.lines_good().parsed().collect::<Result<Vec<_>, _>>()?;
 
         Graph::new(edges.into_iter())
     }

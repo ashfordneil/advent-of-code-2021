@@ -1,4 +1,4 @@
-use advent_of_code_2021::{parsing, util};
+use advent_of_code_2021::{data::Coordinate, parsing, tools::StringTools, util};
 use std::{cmp, collections::HashSet, path::PathBuf, str::FromStr};
 
 use structopt::StructOpt;
@@ -12,29 +12,15 @@ struct Args {
 
 #[derive(Debug, Copy, Clone)]
 struct Line {
-    start: (u32, u32),
-    end: (u32, u32),
+    start: Coordinate,
+    end: Coordinate,
 }
 
 impl FromStr for Line {
     type Err = eyre::Report;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let (start, end) = s
-            .split_once(" -> ")
-            .ok_or_else(|| eyre::format_err!("Invalid line format"))?;
-        let to_coord = |string: &str| -> eyre::Result<_> {
-            let (x, y) = string
-                .split_once(',')
-                .ok_or_else(|| eyre::format_err!("Invalid coordinate format"))?;
-            let x = x.parse()?;
-            let y = y.parse()?;
-
-            Ok((x, y))
-        };
-
-        let start = to_coord(start)?;
-        let end = to_coord(end)?;
+        let (start, end) = s.split_parse(" -> ")?;
 
         let output = Line { start, end };
         Ok(output)
@@ -46,7 +32,7 @@ impl Line {
         self.start.0 == self.end.0 || self.start.1 == self.end.1
     }
 
-    fn points(self) -> impl Iterator<Item = (u32, u32)> {
+    fn points(self) -> impl Iterator<Item = Coordinate> {
         let min = cmp::min(self.start, self.end);
         let max = cmp::max(self.start, self.end);
 
@@ -60,15 +46,15 @@ impl Line {
 
         range.map(move |item| {
             if self.start.0 == self.end.0 {
-                (self.start.0, item)
+                Coordinate(self.start.0, item)
             } else if self.start.1 == self.end.1 {
-                (item, self.start.1)
+                Coordinate(item, self.start.1)
             } else {
                 let delta = item - min.0;
                 if max.1 > min.1 {
-                    (item, min.1 + delta)
+                    Coordinate(item, min.1 + delta)
                 } else {
-                    (item, min.1 - delta)
+                    Coordinate(item, min.1 - delta)
                 }
             }
         })
@@ -115,18 +101,19 @@ fn part_two(input: impl Iterator<Item = Line>) -> usize {
 #[cfg(test)]
 mod test {
     use super::Line;
+    use advent_of_code_2021::data::Coordinate;
 
     const EXAMPLE_INPUT: &'static [Line] = &[
-        Line { start: (0, 9), end: (5, 9) },
-        Line { start: (8, 0), end: (0, 8) },
-        Line { start: (9, 4), end: (3, 4) },
-        Line { start: (2, 2), end: (2, 1) },
-        Line { start: (7, 0), end: (7, 4) },
-        Line { start: (6, 4), end: (2, 0) },
-        Line { start: (0, 9), end: (2, 9) },
-        Line { start: (3, 4), end: (1, 4) },
-        Line { start: (0, 0), end: (8, 8) },
-        Line { start: (5, 5), end: (8, 2) },
+        Line { start: Coordinate(0, 9), end: Coordinate(5, 9) },
+        Line { start: Coordinate(8, 0), end: Coordinate(0, 8) },
+        Line { start: Coordinate(9, 4), end: Coordinate(3, 4) },
+        Line { start: Coordinate(2, 2), end: Coordinate(2, 1) },
+        Line { start: Coordinate(7, 0), end: Coordinate(7, 4) },
+        Line { start: Coordinate(6, 4), end: Coordinate(2, 0) },
+        Line { start: Coordinate(0, 9), end: Coordinate(2, 9) },
+        Line { start: Coordinate(3, 4), end: Coordinate(1, 4) },
+        Line { start: Coordinate(0, 0), end: Coordinate(8, 8) },
+        Line { start: Coordinate(5, 5), end: Coordinate(8, 2) },
     ];
 
     #[test]

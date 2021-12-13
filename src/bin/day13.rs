@@ -1,4 +1,8 @@
-use advent_of_code_2021::util;
+use advent_of_code_2021::{
+    data::Coordinate,
+    tools::{MoreItertools, StringTools},
+    util,
+};
 use std::{collections::HashSet, fs, path::PathBuf, str::FromStr};
 
 use itertools::Itertools;
@@ -10,8 +14,6 @@ struct Args {
     /// The path to the input file we want to run with.
     file: PathBuf,
 }
-
-type Coordinate = (usize, usize);
 
 #[derive(Debug)]
 struct Manual {
@@ -33,23 +35,12 @@ impl FromStr for Manual {
             .split_once("\n\n")
             .ok_or_else(|| eyre::format_err!("Invalid input"))?;
         let points = points
-            .lines()
-            .map(|line| line.trim())
-            .filter(|line| !line.is_empty())
-            .map(|line| {
-                let (x, y) = line
-                    .split_once(',')
-                    .ok_or_else(|| eyre::format_err!("Invalid coordinate: {:?}", line))?;
-                let x = x.parse()?;
-                let y = y.parse()?;
-                Ok::<_, eyre::Report>((x, y))
-            })
+            .lines_good()
+            .parsed()
             .collect::<Result<Vec<Coordinate>, _>>()?;
         let folds = folds
-            .lines()
-            .map(|line| line.trim())
-            .filter(|line| !line.is_empty())
-            .map(|line| line.parse())
+            .lines_good()
+            .parsed()
             .collect::<Result<Vec<Fold>, _>>()?;
 
         let output = Manual { points, folds };
@@ -109,10 +100,10 @@ impl Fold {
         }
     }
 
-    pub fn fold(self, (x, y): Coordinate) -> Coordinate {
+    pub fn fold(self, Coordinate(x, y): Coordinate) -> Coordinate {
         match self {
-            Fold::X(fx) => (Self::reflect(x, fx), y),
-            Fold::Y(fy) => (x, Self::reflect(y, fy)),
+            Fold::X(fx) => Coordinate(Self::reflect(x, fx), y),
+            Fold::Y(fy) => Coordinate(x, Self::reflect(y, fy)),
         }
     }
 
@@ -155,7 +146,7 @@ fn part_two(input: &Manual) -> Vec<String> {
         .map(|y| {
             (0..max_x)
                 .map(|x| {
-                    if all_points.contains(&(x, y)) {
+                    if all_points.contains(&Coordinate(x, y)) {
                         '#'
                     } else {
                         '.'

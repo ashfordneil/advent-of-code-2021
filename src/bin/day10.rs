@@ -140,6 +140,7 @@ fn part_two(input: &[Line]) -> u64 {
 #[cfg(test)]
 mod test {
     use super::Line;
+    use advent_of_code_2021::tools::{StringTools, MoreItertools};
 
     fn get_input() -> Vec<Line> {
         const EXAMPLE_INPUT: &'static str = r"
@@ -156,10 +157,8 @@ mod test {
         ";
 
         EXAMPLE_INPUT
-            .lines()
-            .map(|line| line.trim())
-            .filter(|line| !line.is_empty())
-            .map(|line| line.parse::<Line>())
+            .lines_good()
+            .parsed()
             .collect::<Result<Vec<_>, _>>()
             .expect("Unable to parse input")
     }

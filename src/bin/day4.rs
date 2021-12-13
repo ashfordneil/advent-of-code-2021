@@ -1,4 +1,7 @@
-use advent_of_code_2021::util::{self, FixedCollector};
+use advent_of_code_2021::{
+    tools::MoreItertools,
+    util::{self, FixedCollector},
+};
 use std::{fs, path::PathBuf, str::FromStr};
 
 use itertools::Itertools;
@@ -77,11 +80,12 @@ fn parse_bingo(input: &str) -> eyre::Result<(Vec<u32>, Vec<BingoBoard>)> {
     let bingo_numbers = bingo_numbers
         .trim()
         .split(',')
-        .map(|number| number.parse::<u32>())
+        .parsed()
         .collect::<Result<Vec<_>, _>>()?;
     let boards = boards
         .split("\n\n")
-        .map(|board| board.trim().parse::<BingoBoard>())
+        .map(|board| board.trim())
+        .parsed()
         .collect::<Result<Vec<_>, _>>()?;
 
     Ok((bingo_numbers, boards))
